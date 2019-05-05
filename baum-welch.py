@@ -1,4 +1,3 @@
-import sys
 import argparse
 import pandas as pd
 import numpy as np
@@ -7,10 +6,10 @@ import itertools
 
 FP_SCALE = 1e300
 
-def gen_prob_tables(p, r, uv, tv, ur, tr):
+def gen_prob_tables(p, r, uv, sv, ur, sr):
     U = np.array([p, 1 - p])
     T = np.array([[p, 1-p], [1 -r, r]])
-    norms = [spst.norm(uv, tv), spst.norm(ur, tr)]
+    norms = [spst.norm(uv, sv), spst.norm(ur, sr)]
 
     return U, T, norms
 
@@ -75,16 +74,16 @@ def moment_table(k, y, Pxi):
 
     return M / FP_SCALE
 
-def convergence_factor(p, r, u, t, pn, rn, un, tn):
+def convergence_factor(p, r, u, s, pn, rn, un, sn):
     prat = abs(pn - p) / p
     rrat = abs(rn - r) / r
     urat = [abs(uni - ui) / ui for (uni, ui) in zip(un, u)]
-    trat = [abs(tni - ti) / ti for (tni, ti) in zip(tn, t)]
+    srat = [abs(sni - si) / si for (sni, si) in zip(sn, s)]
 
-    return prat + rrat + sum(urat + trat)
+    return prat + rrat + sum(urat + srat)
 
-def calc_next_params(y, p, r, uv, tv, ur, tr):
-    U, T, norms = gen_prob_tables(p, r, uv, tv, ur, tr)
+def calc_next_params(y, p, r, uv, sv, ur, sr):
+    U, T, norms = gen_prob_tables(p, r, uv, sv, ur, sr)
 
     F = forward_table(y, U, T, norms)
     B = backward_table(y, U, T, norms)
@@ -97,7 +96,7 @@ def calc_next_params(y, p, r, uv, tv, ur, tr):
     M2 = moment_table(2, y, Pxi)
 
     un = M1 / M0
-    tn = np.sqrt(M2 / M0 - M1**2 / M0**2)
+    sn = np.sqrt(M2 / M0 - M1**2 / M0**2)
 
     Xp = p + C[0,0]
     Yp = (1 - p) + C[0,1]
@@ -107,9 +106,9 @@ def calc_next_params(y, p, r, uv, tv, ur, tr):
     pn = Xp / (Xp + Yp)
     rn = Xr / (Xr + Yr)
 
-    conv = convergence_factor(p, r, [uv, ur], [tv, tr], pn, rn, un, tn)
+    conv = convergence_factor(p, r, [uv, ur], [sv, sr], pn, rn, un, sn)
 
-    return pn, rn, un[0], tn[0], un[1], tn[1], conv
+    return pn, rn, un[0], sn[0], un[1], sn[1], conv
 
 def main():
     parser = argparse.ArgumentParser(description="Baum-Welch training for Dog Race model")
@@ -123,16 +122,16 @@ def main():
     p = 0.5
     r = 0.5
     uv = np.mean(y[:L])
-    tv = np.std(y[:L])
+    sv = np.std(y[:L])
     ur = np.mean(y[L:])
-    tr = np.std(y[L:])
+    sr = np.std(y[L:])
     conv = 1.0
     niter = 0
 
-    print("Compute EM for dataset of {} points".format(L))
+    print("Compute EM for dataset of {} points".format(len(y)))
 
     while conv > 0.001:
-        (p, r, uv, tv, ur, tr, conv) = calc_next_params(y, p, r, uv, tv, ur, tr)
+        (p, r, uv, sv, ur, sr, conv) = calc_next_params(y, p, r, uv, sv, ur, sr)
         niter += 1
 
     print("Finished EM in {} cycles".format(niter))
@@ -140,9 +139,9 @@ def main():
     print("p  = {}".format(p))
     print("r  = {}".format(r))
     print("uv = {}".format(uv))
-    print("tv = {}".format(tv))
+    print("sv = {}".format(sv))
     print("ur = {}".format(ur))
-    print("tr = {}".format(tr))
+    print("sr = {}".format(sr))
 
 if __name__ == "__main__":
     main()
