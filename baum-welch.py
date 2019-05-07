@@ -50,7 +50,6 @@ def backward_table(y, U, T, norms):
 def ecij_table(y, F, B, T, norms, PY):
     C = np.zeros((2, 2), dtype=np.float64)
 
-    L = len(y)
     m = len(norms)
 
     for (i, j) in itertools.product(range(0, m), range(0, m)):
@@ -110,6 +109,21 @@ def calc_next_params(y, p, r, uv, sv, ur, sr):
 
     return pn, rn, un[0], sn[0], un[1], sn[1], conv
 
+def calc_final_prob(y, p, r, uv, sv, ur, sr):
+    U, T, norms = gen_prob_tables(p, r, uv, sv, ur, sr)
+    m = len(norms)
+
+    F = forward_table(y, U, T, norms)
+    B = backward_table(y, U, T, norms)
+
+    PY = np.sum(F[-1])
+    Px = F[-1] / PY
+    ybar = np.mean(y)
+    indices = itertools.product(range(0, m), range(0, m))
+    Pext = sum([Px[i] * T[i, j] * norms[j].cdf(ybar) for (i, j) in indices])
+
+    return Px, Pext
+
 def main():
     parser = argparse.ArgumentParser(description="Baum-Welch training for Dog Race model")
     parser.add_argument("-c", dest="conv_threshold", type=float, default=0.001)
@@ -143,6 +157,10 @@ def main():
     print("tv = {}".format(1 / sv ** 2))
     print("ur = {}".format(ur))
     print("tr = {}".format(1 / sr ** 2))
+
+    Px, Pext = calc_final_prob(y, p, r, uv, sv, ur, sr)
+    print("Prob. of X on last day: {}".format(Px))
+    print("Prob. of smaller-than-average run on additional day: {}".format(Pext))
 
 if __name__ == "__main__":
     main()
