@@ -37,8 +37,8 @@ def main():
     parser.add_argument("outfile")
     args = parser.parse_args()
 
-    sv = 1 / math.sqrt(args.tv)
-    sr = 1 / math.sqrt(args.tr)
+    sv = math.sqrt(1 / args.tv)
+    sr = math.sqrt(1 / args.tr)
     states, times = simulate(args.p, args.r, args.uv, sv, args.ur, sr, args.n)
 
     with open(args.outfile, "w") as f:
