@@ -142,7 +142,7 @@ def main():
     print("uv = {}".format(uv))
     print("tv = {}".format(1 / sv ** 2))
     print("ur = {}".format(ur))
-    print("sr = {}".format(1 / sr ** 2))
+    print("tr = {}".format(1 / sr ** 2))
 
 if __name__ == "__main__":
     main()

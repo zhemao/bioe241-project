@@ -133,7 +133,7 @@ def main():
     sr = np.mean(rvalues)
     tr = 1.0 / sr ** 2
 
-    (ps, rs, uvs, tvs, urs, trs) = gibbs_sample(p, r, uv, tv, ur, tr, x, y)
+    (ps, rs, uvs, tvs, urs, trs) = gibbs_sample(p, r, uv, tv, ur, tr, x, y, args.niters)
 
     print_range("p", ps)
     print_range("r", rs)
