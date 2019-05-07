@@ -139,9 +139,9 @@ def main():
     print("p  = {}".format(p))
     print("r  = {}".format(r))
     print("uv = {}".format(uv))
-    print("sv = {}".format(sv))
+    print("tv = {}".format(1 / sv ** 2))
     print("ur = {}".format(ur))
-    print("sr = {}".format(sr))
+    print("sr = {}".format(1 / sr ** 2))
 
 if __name__ == "__main__":
     main()

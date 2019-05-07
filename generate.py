@@ -2,6 +2,7 @@ import sys
 import argparse
 import random
 import csv
+import math
 
 def gentime(state, uv, sv, ur, sr):
     if state == 0:
@@ -29,14 +30,16 @@ def main():
     parser.add_argument("-p", type=float)
     parser.add_argument("-r", type=float)
     parser.add_argument("--uv", type=float)
-    parser.add_argument("--sv", type=float)
+    parser.add_argument("--tv", type=float)
     parser.add_argument("--ur", type=float)
-    parser.add_argument("--sr", type=float)
+    parser.add_argument("--tr", type=float)
     parser.add_argument("-n", type=int)
     parser.add_argument("outfile")
     args = parser.parse_args()
 
-    states, times = simulate(args.p, args.r, args.uv, args.sv, args.ur, args.sr, args.n)
+    sv = 1 / math.sqrt(args.tv)
+    sr = 1 / math.sqrt(args.tr)
+    states, times = simulate(args.p, args.r, args.uv, sv, args.ur, sr, args.n)
 
     with open(args.outfile, "w") as f:
         writer = csv.writer(f, delimiter=' ')
