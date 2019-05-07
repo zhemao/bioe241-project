@@ -30,8 +30,8 @@ def expected_results(p, r, uv, tv, ur, tr):
 
 def gentime(state, uv, tv, ur, tr):
     if state == 0:
-        return random.gauss(uv, tv)
-    return random.gauss(ur, tr)
+        return random.gauss(uv, math.sqrt(1.0 / tv))
+    return random.gauss(ur, math.sqrt(1.0 / tr))
 
 def simulate(p, r, uv, tv, ur, tr, n):
     states = [0] * n
