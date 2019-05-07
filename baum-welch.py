@@ -112,6 +112,7 @@ def calc_next_params(y, p, r, uv, sv, ur, sr):
 
 def main():
     parser = argparse.ArgumentParser(description="Baum-Welch training for Dog Race model")
+    parser.add_argument("-c", dest="conv_threshold", type=float, default=0.001)
     parser.add_argument("inputfile")
     args = parser.parse_args()
 
@@ -130,7 +131,7 @@ def main():
 
     print("Compute EM for dataset of {} points".format(len(y)))
 
-    while conv > 0.001:
+    while conv > args.conv_threshold:
         (p, r, uv, sv, ur, sr, conv) = calc_next_params(y, p, r, uv, sv, ur, sr)
         niter += 1
 

@@ -5,8 +5,6 @@ import numpy as np
 import scipy.stats
 from scipy.integrate import quad
 
-NUM_SAMPLE_ITERS = 100
-
 class trans_prob_dist(scipy.stats.rv_continuous):
     def __init__(self, c0, c1):
         self.c0 = c0
@@ -34,15 +32,15 @@ def moment(x, y, i, k):
             m += yn ** k
     return m
 
-def gibbs_sample(p, r, uv, tv, ur, tr, x, y):
-    ps = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
-    rs = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
-    uvs = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
-    tvs = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
-    urs = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
-    trs = np.zeros(NUM_SAMPLE_ITERS, dtype=np.float64)
+def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
+    ps = np.zeros(niters, dtype=np.float64)
+    rs = np.zeros(niters, dtype=np.float64)
+    uvs = np.zeros(niters, dtype=np.float64)
+    tvs = np.zeros(niters, dtype=np.float64)
+    urs = np.zeros(niters, dtype=np.float64)
+    trs = np.zeros(niters, dtype=np.float64)
 
-    for itr in range(0, NUM_SAMPLE_ITERS):
+    for itr in range(0, niters):
         c00 = trans_count(x, 0, 0) + int(x[0] == 0)
         c01 = trans_count(x, 0, 1) + int(x[0] == 1)
         c10 = trans_count(x, 1, 0)
@@ -111,6 +109,7 @@ def print_range(name, values):
 
 def main():
     parser = argparse.ArgumentParser(description="Gibbs sampling for Dog Race model")
+    parser.add_argument("-i", dest="niters", type=int, default=100)
     parser.add_argument("inputfile")
     args = parser.parse_args()
 
