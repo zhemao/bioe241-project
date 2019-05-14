@@ -7,6 +7,9 @@ import itertools
 FP_SCALE = 1e300
 
 def gen_prob_tables(p, r, uv, sv, ur, sr):
+    # U are the initial state probabilities
+    # T are the state transition probabilities
+    # norms are normal distributions for each state
     U = np.array([p, 1 - p])
     T = np.array([[p, 1-p], [1 -r, r]])
     norms = [spst.norm(uv, sv), spst.norm(ur, sr)]
@@ -18,11 +21,13 @@ def forward_table(y, U, T, norms):
     L = len(y)
     F = np.zeros((L, m), dtype=np.float64)
 
+    # Compute base cases. Use FP_SCALE to prevent underflow
     for i in range(0, m):
         F[0, i] = norms[i].pdf(y[0]) * U[i] * FP_SCALE
 
     for n in range(1, L):
         for i in range(0, m):
+            # F[n, i] = e(i, y[n]) * sum(t[j, i] * F[n - 1, j])
             e = norms[i].pdf(y[n])
             f = F[n - 1]
             t = T[:,i]
@@ -35,11 +40,13 @@ def backward_table(y, U, T, norms):
     L = len(y)
     B = np.zeros((len(y), 2), dtype=np.float64)
 
+    # Base case is just 1, but with FP_SCALE constant to prevent underflow
     for i in range(0, m):
         B[L-1, i] = FP_SCALE
 
     for n in range(L-2, -1, -1):
         for j in range(0, m):
+            # B[n, j] = sum(t[j, i] * e(i, y[n+1]) * B[n+1, i])
             t = T[j]
             e = np.array([norms[i].pdf(y[n+1]) for i in range(0, m)])
             b = B[n+1]
@@ -52,6 +59,7 @@ def ecij_table(y, F, B, T, norms, PY):
 
     m = len(norms)
 
+    # C[i, j] = sum(F[n, i] * t(i, j) * e(j, y[n+1]) * B[n+1, j]) / PY
     for (i, j) in itertools.product(range(0, m), range(0, m)):
         t = T[i, j]
         f = F[:-1, i]
@@ -60,6 +68,8 @@ def ecij_table(y, F, B, T, norms, PY):
         c = f * b * t * e
         C[i, j] = np.sum(c)
 
+    # F and B are both scaled by FP_SCALE, so C will be scaled by FP_SCALE^2
+    # PY is scaled by FP_SCALE, so only need to divide by FP_SCALE one more time to normalize
     return C / (FP_SCALE * PY)
 
 def moment_table(k, y, Pxi):
@@ -67,10 +77,12 @@ def moment_table(k, y, Pxi):
     M = np.zeros(m)
     yk = y ** k
 
+    # M[i] = sum(P(x[n] = i) * y[n]^k)
     for i in range(0, m):
         Px = Pxi[:,i]
         M[i] = np.dot(yk, Px)
 
+    # Pxi is scaled up by FP_SCALE, so need to divide
     return M / FP_SCALE
 
 def convergence_factor(p, r, u, s, pn, rn, un, sn):
@@ -94,9 +106,11 @@ def calc_next_params(y, p, r, uv, sv, ur, sr):
     M1 = moment_table(1, y, Pxi)
     M2 = moment_table(2, y, Pxi)
 
+    # calculate next mean/stdev using moments
     un = M1 / M0
     sn = np.sqrt(M2 / M0 - M1**2 / M0**2)
 
+    # calculate new transition probabilities based on expected transitions
     Xp = p + C[0,0]
     Yp = (1 - p) + C[0,1]
     Xr = C[1,1]
@@ -134,6 +148,7 @@ def main():
     y = df["Time"]
     L = int(len(y) / 2)
 
+    # Initial parameters
     p = 0.5
     r = 0.5
     uv = np.mean(y[:L])

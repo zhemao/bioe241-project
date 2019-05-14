@@ -41,6 +41,7 @@ def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
     trs = np.zeros(niters, dtype=np.float64)
 
     for itr in range(0, niters):
+        # Sample p and r from transition probability distribution
         c00 = trans_count(x, 0, 0) + int(x[0] == 0)
         c01 = trans_count(x, 0, 1) + int(x[0] == 1)
         c10 = trans_count(x, 1, 0)
@@ -48,6 +49,7 @@ def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
         p = trans_prob_dist(c00, c01).rvs()
         r = trans_prob_dist(c11, c10).rvs()
 
+        # Sample tv from gamma and uv from normal
         m00 = moment(x, y, 0, 0)
         m01 = moment(x, y, 0, 1)
         m02 = moment(x, y, 0, 2)
@@ -58,6 +60,7 @@ def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
         s0 = 1 / np.sqrt(m00 * tv)
         uv = scipy.stats.norm(e0, s0).rvs()
 
+        # Sample tr from gamma and ur from normal
         m10 = moment(x, y, 1, 0)
         m11 = moment(x, y, 1, 1)
         m12 = moment(x, y, 1, 2)
@@ -73,12 +76,14 @@ def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
         normv = scipy.stats.norm(uv, sv)
         normr = scipy.stats.norm(ur, sr)
 
+        # Sample x[0]
         t0 = p if x[1] == 0 else (1 - p)
         t1 = (1 - r) if x[1] == 0 else r
         px0 = p * normv.pdf(y[0]) * t0
         px1 = (1 - p) * normr.pdf(y[0]) * t1
         x[0] = random.choices([0, 1], weights=[px0, px1])[0]
 
+        # Sample x[1] to x[n-2]
         for i in range(1, len(x)-1):
             tin0 = p if x[i-1] == 0 else (1 - r)
             tin1 = (1 - p) if x[i-1] == 0 else r
@@ -88,6 +93,7 @@ def gibbs_sample(p, r, uv, tv, ur, tr, x, y, niters):
             px1 = tin1 * normr.pdf(y[i]) * tout1
             x[i] = random.choices([0, 1], weights=[px0, px1])[0]
 
+        # Sample x[n-1]
         n = len(y)
         t0 = p if x[-2] == 0 else (1 - r)
         t1 = (1 - p) if x[-2] == 0 else  r
@@ -120,8 +126,10 @@ def main():
     p = 0.5
     r = 0.5
 
+    # Pick initial states randomly
     x = [random.choice([0, 1]) for _ in y]
 
+    # Pull out the times associated with each state and use it to compute mean/precision
     vvalues = [y[i] for (i, x) in enumerate(x) if x == 0]
     rvalues = [y[i] for (i, x) in enumerate(x) if x == 1]
 
