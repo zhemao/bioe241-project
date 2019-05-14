@@ -140,7 +140,7 @@ def main():
     sv = np.std(y[:L])
     ur = np.mean(y[L:])
     sr = np.std(y[L:])
-    conv = 1.0
+    conv = float("inf")
     niter = 0
 
     print("Compute EM for dataset of {} points".format(len(y)))
