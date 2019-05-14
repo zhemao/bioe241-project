@@ -69,7 +69,7 @@ def moment_table(k, y, Pxi):
 
     for i in range(0, m):
         Px = Pxi[:,i]
-        M[i] = np.sum(yk * Px)
+        M[i] = np.dot(yk, Px)
 
     return M / FP_SCALE
 
